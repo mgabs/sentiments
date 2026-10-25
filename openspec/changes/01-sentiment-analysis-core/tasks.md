@@ -22,8 +22,8 @@
 - [x] 3.5 **Mutation Tests**: Run `mutmut` on `src/sentiments/dataset/` and achieve 100% kill score.
 
 ## Phase 4: Tier 0 Dumb Baseline Classifier (`sentiments.providers.tier0`) [Parallel Worktree: `.worktrees/tier0-baseline`]
-- [ ] 4.1 **BDD**: Write Gherkin feature scenarios for `MajorityClassClassifier` and `LexiconRuleClassifier` in `tests/bdd/features/tier0_baseline.feature`.
-- [ ] 4.2 **Review Gate 5.3**: Present Phase 4 BDD scenarios for approval.
+- [x] 4.1 **BDD**: Write Gherkin feature scenarios for `MajorityClassClassifier` and `LexiconRuleClassifier` in `tests/bdd/features/tier0_baseline.feature`.
+- [x] 4.2 **Review Gate 5.3**: Phase 4 BDD scenarios approved.
 - [ ] 4.3 **Unit Tests**: Implement unit tests (`tests/unit/test_tier0.py`) verifying latency (<1.0ms), determinism, tie-breaking, and boundary conditions (>= 95% coverage).
 - [ ] 4.4 **Implementation**: Implement `MajorityClassClassifier` and `LexiconRuleClassifier` in `src/sentiments/providers/tier0.py`.
 - [ ] 4.5 **Mutation Tests**: Run `mutmut` on `src/sentiments/providers/tier0.py` and achieve 100% kill score.
