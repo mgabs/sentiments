@@ -81,6 +81,18 @@ Sample output:
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | MajorityClassClassifier | Tier.TIER_0 | 0.9270 | 0.3207 | +0.0000 | 0.00 | 1.0x | 1061332.7 | 0.0000 | +0.0000 |
 | LexiconRuleClassifier | Tier.TIER_0 | 0.4745 | 0.2828 | -0.0379 | 0.01 | 255.0x | 70239.9 | 0.0000 | +0.0000 |
+
+Column definitions:
+- `Model`: Evaluated classifier name.
+- `Tier`: Architectural tier (Tier 0: Rule-based heuristics).
+- `Accuracy`: Proportion of correct predictions over total samples.
+- `Macro F1`: Unweighted mean of F1-scores across all classes.
+- `Δ F1`: Difference in Macro F1 relative to baseline.
+- `p50 Latency (ms)`: Median inference latency per sample in milliseconds.
+- `Latency Ratio`: Latency multiplier relative to baseline (`p50 / Baseline p50`).
+- `QPS`: Throughput in queries processed per second.
+- `Cost / 1k ($)`: Estimated operational cost in USD per 1,000 predictions.
+- `Δ Cost ($)`: Cost delta per 1,000 predictions relative to baseline.
 ```
 
 ---

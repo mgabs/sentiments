@@ -61,11 +61,30 @@ def run_benchmark():
 
     # Generate Markdown Table
     md_table = BenchmarkReporter.to_markdown([maj_eval, lex_eval], baseline=maj_eval)
+    footnotes = (
+        "### Column Definitions\n"
+        "- **Model**: Evaluated classifier name.\n"
+        "- **Tier**: Architectural tier (Tier 0: Rule-based heuristics).\n"
+        "- **Accuracy**: Proportion of correct predictions over total samples.\n"
+        "- **Macro F1**: Unweighted mean of F1-scores across all classes.\n"
+        "- **Δ F1**: Difference in Macro F1 relative to baseline (`Macro F1(Candidate) - Macro F1(Baseline)`).\n"
+        "- **p50 Latency (ms)**: Median inference latency per sample in milliseconds.\n"
+        "- **Latency Ratio**: Relative latency multiplier compared to baseline (`p50(Candidate) / p50(Baseline)`).\n"
+        "- **QPS**: Throughput measured in queries processed per second.\n"
+        "- **Cost / 1k ($)**: Estimated operational cost in USD per 1,000 predictions.\n"
+        "- **Δ Cost ($)**: Cost delta per 1,000 predictions relative to baseline (`Cost(Candidate) - Cost(Baseline)`)."
+    )
     print("\n--- BENCHMARK REPORT ---")
     print(md_table)
+    print(f"\n{footnotes}")
 
     output_path = Path("benchmark_report.md")
-    output_path.write_text(f"# Tier 0 Baseline Benchmark Report\n\nDataset: `nlp-datasets/etsy-reviews` ({len(test_data)} test samples)\n\n{md_table}\n")
+    output_path.write_text(
+        f"# Tier 0 Baseline Benchmark Report\n\n"
+        f"Dataset: `nlp-datasets/etsy-reviews` ({len(test_data)} test samples)\n\n"
+        f"{md_table}\n\n"
+        f"{footnotes}\n"
+    )
     print(f"\nReport written to {output_path}")
 
 
