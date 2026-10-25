@@ -8,7 +8,7 @@ help:
 	@echo "  test-bdd   Run BDD behavior scenarios only"
 	@echo "  coverage   Run tests with branch coverage (>= 95%)"
 	@echo "  mutation   Run mutation testing via mutmut"
-	@echo "  baseline   Run live Tier 0 baseline benchmark (alias: benchmark)"
+	@echo "  benchmark  Run live Tier 0 baseline benchmark (alias: baseline)"
 	@echo "  clean      Clean cache and temporary test artifacts"
 
 install sync:
