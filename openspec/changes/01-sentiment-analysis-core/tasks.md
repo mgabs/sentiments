@@ -29,8 +29,8 @@
 - [x] 4.5 **Mutation Tests**: Run `mutmut` on `src/sentiments/providers/tier0.py` and achieve 100% kill score.
 
 ## Phase 5: Multi-Tier Provider Contracts (`sentiments.providers`)
-- [ ] 5.1 **BDD**: Write Gherkin feature scenarios for Tier 1–4 provider abstractions, mock adapters, and error handling in `tests/bdd/features/provider_contracts.feature`.
-- [ ] 5.2 **Review Gate 5.4**: Present Phase 5 BDD scenarios for approval.
+- [x] 5.1 **BDD**: Write Gherkin feature scenarios for Tier 1–4 provider abstractions, mock adapters, and error handling in `tests/bdd/features/provider_contracts.feature`.
+- [x] 5.2 **Review Gate 5.4**: Phase 5 BDD scenarios approved.
 - [ ] 5.3 **Unit Tests**: Implement unit tests (`tests/unit/test_providers.py`) with mock APIs and timeout handling (>= 95% coverage).
 - [ ] 5.4 **Implementation**: Implement provider stubs and adapters in `src/sentiments/providers/`.
 - [ ] 5.5 **Mutation Tests**: Run `mutmut` on `src/sentiments/providers/` and achieve 100% kill score.
