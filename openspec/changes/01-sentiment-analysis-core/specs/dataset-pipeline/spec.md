@@ -23,6 +23,7 @@ Defines specifications for ingesting, validating, normalizing, and splitting cus
   - `text`: Non-empty cleaned review string.
   - `label`: Canonical sentiment enum (`POSITIVE`, `NEGATIVE`, `NEUTRAL`).
   - `source`: Dataset file origin identifier.
+  - `metadata`: Key-value dictionary containing contextual metadata (MUST include `product`, and where available `category`, `platform`, `language`).
 
 ### Capability: Dataset Splitting
 - **REQ-DATA-6**: The system MUST support deterministic stratified train/val/test splitting given a random seed and split ratios (e.g., 70/15/15 or 80/10/10).
