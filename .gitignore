@@ -1,0 +1,24 @@
+# Virtual Environment & Python cache
+.venv/
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Testing & Mutation Coverage
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.mutmut-cache/
+
+# Git Worktrees & AGY Harness Workspaces
+.worktrees/
+
+# Build & Distribution
+dist/
+build/
+*.egg-info/
+
+# OS Artifacts
+.DS_Store
+Thumbs.db

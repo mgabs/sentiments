@@ -1,0 +1,22 @@
+[project]
+name = "sentiments"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Mohammed Gaber", email = "gaberm@gmail.com" }
+]
+requires-python = ">=3.14"
+dependencies = []
+
+[build-system]
+requires = ["uv_build>=0.13.3,<0.14.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "mutmut>=3.8.0",
+    "pytest>=9.1.1",
+    "pytest-bdd>=9.0.0",
+    "pytest-cov>=7.1.0",
+]
