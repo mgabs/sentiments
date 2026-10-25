@@ -23,12 +23,13 @@ Built following strict **Spec- and Test-Driven Development (STDD)** via OpenSpec
 ```
 ├── benchmark_report.md        # Live Tier 0 benchmark report on customer reviews
 ├── nlp-datasets/              # Raw labeled feedback corpora (Etsy, Trustpilot, etc.)
-├── openspec/
-│   ├── WORKFLOW.md            # STDD lifecycle, review gates, anti-fraud test rules
-│   ├── specs/                 # Active canonical living specifications
-│   └── changes/archive/       # Archived completed change proposals & tasks
 ├── scripts/
 │   └── benchmark_baseline.py  # End-to-end evaluation runner on nlp-datasets/
+├── specs/
+│   ├── WORKFLOW.md            # SDTRD/STDD lifecycle, review gates, anti-fraud test rules
+│   ├── archive/               # Archived completed features (proposals, tasks, specs)
+│   ├── features/              # Active feature proposals and task breakdowns
+│   └── living/                # Canonical living specifications (dataset, engine, eval)
 ├── src/sentiments/
 │   ├── core/                  # Core domain models, protocols (SentimentResult, Tier)
 │   ├── dataset/               # Ingestion, cleaning, metadata extraction, stratified splitting
@@ -129,8 +130,8 @@ print(report)
 
 ## Specifications & STDD Workflow
 
-All architectural decisions and behavior specifications are tracked in [openspec/](file:///Users/mmetawea/Workbench/sentiments/openspec):
-- [WORKFLOW.md](file:///Users/mmetawea/Workbench/sentiments/openspec/WORKFLOW.md): STDD protocol, human review gates, and anti-fraud testing guidelines.
-- [openspec/specs/dataset-pipeline/spec.md](file:///Users/mmetawea/Workbench/sentiments/openspec/specs/dataset-pipeline/spec.md): Dataset ingestion and normalization requirements.
-- [openspec/specs/sentiment-engine/spec.md](file:///Users/mmetawea/Workbench/sentiments/openspec/specs/sentiment-engine/spec.md): Pluggable multi-tier inference engine contracts.
-- [openspec/specs/benchmarking/spec.md](file:///Users/mmetawea/Workbench/sentiments/openspec/specs/benchmarking/spec.md): Metric calculation, latency percentiles, and cost estimation specs.
+All architectural decisions and behavior specifications are tracked in [specs/](file:///Users/mmetawea/Workbench/sentiments/specs):
+- [specs/WORKFLOW.md](file:///Users/mmetawea/Workbench/sentiments/specs/WORKFLOW.md): SDTRD/STDD protocol, human review gates, and anti-fraud testing guidelines.
+- [specs/living/dataset-pipeline/spec.md](file:///Users/mmetawea/Workbench/sentiments/specs/living/dataset-pipeline/spec.md): Dataset ingestion and normalization requirements.
+- [specs/living/sentiment-engine/spec.md](file:///Users/mmetawea/Workbench/sentiments/specs/living/sentiment-engine/spec.md): Pluggable multi-tier inference engine contracts.
+- [specs/living/benchmarking/spec.md](file:///Users/mmetawea/Workbench/sentiments/specs/living/benchmarking/spec.md): Metric calculation, latency percentiles, and cost estimation specs.
