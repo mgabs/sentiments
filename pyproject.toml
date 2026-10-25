@@ -13,6 +13,10 @@ dependencies = []
 requires = ["uv_build>=0.13.3,<0.14.0"]
 build-backend = "uv_build"
 
+[tool.mutmut]
+source_paths = ["src/sentiments/core/"]
+runner = "python -m pytest -x"
+
 [dependency-groups]
 dev = [
     "mutmut>=3.8.0",
