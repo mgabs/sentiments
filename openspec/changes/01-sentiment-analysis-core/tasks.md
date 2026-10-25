@@ -36,11 +36,11 @@
 - [x] 5.5 **Mutation Tests**: Run `mutmut` on `src/sentiments/providers/` and achieve 100% kill score.
 
 ## Phase 6: Benchmarking & Reporting Engine (`sentiments.eval`)
-- [ ] 6.1 **BDD**: Write Gherkin feature scenarios for metric computation (Accuracy, Macro F1, Precision, Recall, Confusion Matrix), latency percentiles, cost estimation, and delta comparison in `tests/bdd/features/benchmarking.feature`.
-- [ ] 6.2 **Review Gate 5.5**: Present Phase 6 BDD scenarios for approval.
-- [ ] 6.3 **Unit Tests**: Implement unit tests (`tests/unit/test_eval.py`) covering metric edge cases (zero division, empty arrays) and table rendering (>= 95% coverage).
-- [ ] 6.4 **Implementation**: Implement `MetricsCalculator`, `CostEstimator`, and `BenchmarkReporter` in `src/sentiments/eval/`.
-- [ ] 6.5 **Mutation Tests**: Run `mutmut` on `src/sentiments/eval/` and achieve 100% kill score.
+- [x] 6.1 **BDD**: Write Gherkin feature scenarios for metric computation (Accuracy, Macro F1, Precision, Recall, Confusion Matrix), latency percentiles, cost estimation, and delta comparison in `tests/bdd/features/benchmarking.feature`.
+- [x] 6.2 **Review Gate 5.5**: Present Phase 6 BDD scenarios for approval.
+- [x] 6.3 **Unit Tests**: Implement unit tests (`tests/unit/test_eval.py`) covering metric edge cases (zero division, empty arrays) and table rendering (>= 95% coverage).
+- [x] 6.4 **Implementation**: Implement `MetricsCalculator`, `CostEstimator`, and `BenchmarkReporter` in `src/sentiments/eval/`.
+- [x] 6.5 **Mutation Tests**: Run `mutmut` on `src/sentiments/eval/` and achieve 100% kill score.
 
 ## Phase 7: Verification & Final Gate
 - [ ] 7.1 Verify 100% BDD scenario pass rate across entire suite.
