@@ -3,11 +3,11 @@ Feature: Tier 0 Dumb Baseline Classifiers
   Scenario: MajorityClassClassifier predicts mode of training distribution
     Given a training dataset with 80 positive and 20 negative records
     When a MajorityClassClassifier is fitted on the training dataset
-    Then its tier is "TIER_0"
-    And its model name is "majority_class_baseline"
+    Then its majority tier is "TIER_0"
+    And its majority model name is "majority_class_baseline"
     And classifying any input text "Any product review" yields label "POSITIVE"
     And the prediction confidence is 0.80
-    And the inference latency is under 1.0 ms
+    And the majority inference latency is under 1.0 ms
 
   Scenario: MajorityClassClassifier tie breaking
     Given a training dataset with 50 positive and 50 negative records
@@ -19,9 +19,9 @@ Feature: Tier 0 Dumb Baseline Classifiers
     Given an initialized LexiconRuleClassifier
     When the classifier evaluates "<text>"
     Then the resulting sentiment label is "<expected_label>"
-    And the tier is "TIER_0"
-    And the model name is "lexicon_rule_baseline"
-    And the inference latency is under 1.0 ms
+    And the lexicon tier is "TIER_0"
+    And the lexicon model name is "lexicon_rule_baseline"
+    And the lexicon inference latency is under 1.0 ms
 
     Examples:
       | text                                | expected_label |

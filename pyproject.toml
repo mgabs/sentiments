@@ -14,7 +14,7 @@ requires = ["uv_build>=0.13.3,<0.14.0"]
 build-backend = "uv_build"
 
 [tool.mutmut]
-source_paths = ["src/sentiments/core/", "src/sentiments/dataset/"]
+source_paths = ["src/sentiments/core/", "src/sentiments/dataset/", "src/sentiments/providers/"]
 runner = ".venv/bin/pytest -x"
 
 [tool.pytest.ini_options]
