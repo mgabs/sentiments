@@ -65,7 +65,7 @@ def run_benchmark():
     evaluations = [maj_eval, lex_eval]
 
     # Model 3: Tier 2 Ollama SLM
-    ollama_backend = OllamaBackend(model_name="qwen2.5:0.5b")
+    ollama_backend = OllamaBackend(model_name="llama3.2:3b")
     if ollama_backend.is_available():
         print(f"[3/4] Running Tier 2 Ollama ({ollama_backend.model_name})...")
         ollama_clf = Tier2SLMClassifier(backend=ollama_backend)
@@ -88,7 +88,7 @@ def run_benchmark():
         print("[3/4] Skipping Ollama (daemon not running on http://localhost:11434)")
 
     # Model 4: Tier 2 MLX SLM
-    mlx_backend = MLXBackend(model_name="mlx-community/Qwen2.5-0.5B-Instruct-4bit")
+    mlx_backend = MLXBackend(model_name="mlx-community/Llama-3.2-3B-Instruct-4bit")
     if mlx_backend.is_available():
         print(f"[4/4] Running Tier 2 MLX ({mlx_backend.model_name})...")
         mlx_clf = Tier2SLMClassifier(backend=mlx_backend)
