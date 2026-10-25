@@ -42,9 +42,7 @@ class FilenameMetadataParser:
         match = cls._PATTERN.match(filename)
         if match:
             gd = match.groupdict()
-            meta: dict[str, Any] = {
-                "product": gd["product"].strip() if gd.get("product") else "",
-            }
+            meta: dict[str, Any] = {"product": gd["product"].strip()}
             if gd.get("category"):
                 meta["category"] = gd["category"].strip()
             if gd.get("platform"):
@@ -56,16 +54,13 @@ class FilenameMetadataParser:
         t_match = cls._TRAINING_PATTERN.match(filename)
         if t_match:
             gd = t_match.groupdict()
-            meta = {
-                "product": gd["product"].strip() if gd.get("product") else "",
-            }
+            meta = {"product": gd["product"].strip()}
             if gd.get("category"):
                 meta["category"] = gd["category"].strip()
             if gd.get("platform"):
                 meta["platform"] = gd["platform"].strip()
             return meta
 
-        # Fallback: strip extension and use as product
         base = filename.rsplit(".", 1)[0]
         return {"product": base}
 

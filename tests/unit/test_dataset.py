@@ -44,12 +44,16 @@ def test_filename_metadata_parser():
     meta3 = FilenameMetadataParser.parse("SimpleReviews.csv")
     assert meta3["product"] == "SimpleReviews"
 
+    meta4 = FilenameMetadataParser.parse("Simple.Product.Name.csv")
+    assert meta4["product"] == "Simple.Product.Name"
+
 
 def test_text_sanitizer():
     assert TextSanitizer.clean("  <b>Hello World!</b> \n") == "Hello World!"
     assert TextSanitizer.clean("<p>Paragraph &amp; text</p>") == "Paragraph & text"
     assert TextSanitizer.clean("   \t\n  ") == ""
     assert TextSanitizer.clean(None) == ""
+    assert TextSanitizer.clean("word\\rword\\tword\\nword") == "word word word word"
 
 
 def test_dataset_record_validation():
@@ -63,15 +67,25 @@ def test_dataset_record_validation():
     assert rec.id == "rec_1"
     assert rec.text == "Great shoes!"
     assert rec.label == SentimentLabel.POSITIVE
+    assert rec.source == "test.csv"
     assert rec.metadata["product"] == "Shoes"
 
-    with pytest.raises(ValueError, match="text cannot be empty"):
+    with pytest.raises(ValueError, match=r"^text cannot be empty$"):
         DatasetRecord(
             id="rec_2",
             text="   ",
             label=SentimentLabel.POSITIVE,
             source="test.csv",
             metadata={"product": "Shoes"},
+        )
+
+    with pytest.raises(ValueError, match=r"^id cannot be empty$"):
+        DatasetRecord(
+            id="",
+            text="Valid text",
+            label=SentimentLabel.POSITIVE,
+            source="src",
+            metadata={"product": "P"},
         )
 
 
@@ -90,6 +104,57 @@ def test_dataset_loader_delim_detection(tmp_path: Path):
     products = {r.metadata["product"] for r in records}
     assert "Product" in products
     assert "Service" in products
+    assert all(r.source in ["Product (Cat) - Comma Reviews.csv", "Service (Cat) - Semi Reviews.csv"] for r in records)
+
+
+def test_dataset_loader_bom_and_equal_delimiter(tmp_path: Path):
+    csv_bom = tmp_path / "Bom (Cat) - Reviews.csv"
+    # BOM in header and equal commas/semicolons
+    csv_bom.write_text("\ufeffContent,Tag\nNice,Positive\n", encoding="utf-8")
+
+    loader = DatasetLoader(root_dir=tmp_path)
+    records = loader.load_all()
+    assert len(records) == 1
+    assert records[0].text == "Nice"
+    assert records[0].label == SentimentLabel.POSITIVE
+
+
+def test_dataset_loader_delim_counts_commas(tmp_path: Path):
+    # Has more commas than semicolons: should pick comma
+    csv_multi = tmp_path / "Multi (Cat) - Reviews.csv"
+    csv_multi.write_text("Content,Tag,Notes\nHello;World,Positive,Extra\n", encoding="utf-8")
+    loader = DatasetLoader(root_dir=tmp_path)
+    records = loader.load_all()
+    assert len(records) == 1
+    assert records[0].text == "Hello;World"
+
+
+def test_dataset_loader_handles_invalid_utf8(tmp_path: Path):
+    csv_bad = tmp_path / "Bad (Cat) - Reviews.csv"
+    csv_bad.write_bytes(b"Content,Tag\nValid \xff byte,Positive\n")
+    loader = DatasetLoader(root_dir=tmp_path)
+    records = loader.load_all()
+    assert len(records) == 1
+    assert records[0].label == SentimentLabel.POSITIVE
+
+
+def test_dataset_loader_skips_git_and_worktrees(tmp_path: Path):
+    git_dir = tmp_path / "0_git" / ".git" / "sub"
+    git_dir.mkdir(parents=True)
+    (git_dir / "Git (Cat) - Reviews.csv").write_text("Content,Tag\nGit text,Positive\n", encoding="utf-8")
+
+    wt_dir = tmp_path / "0_wt" / ".worktrees" / "sub"
+    wt_dir.mkdir(parents=True)
+    (wt_dir / "Wt (Cat) - Reviews.csv").write_text("Content,Tag\nWt text,Positive\n", encoding="utf-8")
+
+    real_dir = tmp_path / "1_real"
+    real_dir.mkdir(parents=True)
+    (real_dir / "Real (Cat) - Reviews.csv").write_text("Content,Tag\nReal text,Positive\n", encoding="utf-8")
+
+    loader = DatasetLoader(root_dir=tmp_path)
+    records = loader.load_all()
+    assert len(records) == 1
+    assert records[0].text == "Real text"
 
 
 def test_dataset_loader_filters_empty_and_unlabelled(tmp_path: Path):
@@ -101,9 +166,30 @@ def test_dataset_loader_filters_empty_and_unlabelled(tmp_path: Path):
     assert len(records) == 1
     assert records[0].text == "Real review"
     assert records[0].label == SentimentLabel.NEGATIVE
+    assert records[0].source == "Test (Cat) - Reviews.csv"
 
 
-def test_stratified_splitter():
+def test_dataset_loader_nonexistent_dir(tmp_path: Path):
+    loader = DatasetLoader(root_dir=tmp_path / "does_not_exist")
+    assert loader.load_all() == []
+
+
+def test_dataset_loader_handles_short_rows(tmp_path: Path):
+    csv = tmp_path / "Short (Cat) - Reviews.csv"
+    csv.write_text("Content,Tag\nOnlyContent\n", encoding="utf-8")
+    loader = DatasetLoader(root_dir=tmp_path)
+    assert loader.load_all() == []
+
+
+def test_stratified_splitter_defaults():
+    splitter = StratifiedSplitter()
+    assert splitter.train_ratio == 0.70
+    assert splitter.val_ratio == 0.15
+    assert splitter.test_ratio == 0.15
+    assert splitter.seed == 42
+
+
+def test_stratified_splitter_execution():
     records = []
     for i in range(60):
         records.append(DatasetRecord(f"p_{i}", f"Positive text {i}", SentimentLabel.POSITIVE, "src", {"product": "P"}))
@@ -121,56 +207,29 @@ def test_stratified_splitter():
 
     # check proportions
     train_pos = sum(1 for r in split.train if r.label == SentimentLabel.POSITIVE)
-    assert train_pos == 42  # 60 * 0.7 = 42
+    assert train_pos == 42
 
     # verify determinism
     split2 = splitter.split(records)
     assert [r.id for r in split.train] == [r.id for r in split2.train]
 
 
-def test_stratified_splitter_invalid_ratios():
-    with pytest.raises(ValueError, match="split ratios must sum to 1.0"):
-        StratifiedSplitter(train_ratio=0.8, val_ratio=0.15, test_ratio=0.15)
+def test_stratified_splitter_invalid_sum():
+    with pytest.raises(ValueError, match=r"^split ratios must sum to 1\.0"):
+        StratifiedSplitter(0.8, 0.15, 0.15)
 
 
-def test_dataset_record_empty_id():
-    with pytest.raises(ValueError, match="id cannot be empty"):
-        DatasetRecord(
-            id="",
-            text="Valid text",
-            label=SentimentLabel.POSITIVE,
-            source="src",
-            metadata={"product": "P"},
-        )
-
-
-def test_dataset_loader_nonexistent_dir(tmp_path: Path):
-    loader = DatasetLoader(root_dir=tmp_path / "does_not_exist")
-    assert loader.load_all() == []
-
-
-def test_dataset_loader_handles_short_rows(tmp_path: Path):
-    csv = tmp_path / "Short (Cat) - Reviews.csv"
-    csv.write_text("Content,Tag\nOnlyContent\n", encoding="utf-8")
-    loader = DatasetLoader(root_dir=tmp_path)
-    records = loader.load_all()
-    assert len(records) == 0
-
-
-def test_stratified_splitter_negative_ratio():
-    with pytest.raises(ValueError, match="split ratios must be non-negative"):
-        StratifiedSplitter(train_ratio=1.2, val_ratio=-0.1, test_ratio=-0.1)
-
-
-def test_stratified_splitter_rounding_boundary():
-    # Test rounding boundary condition with 2 items and 0.6 / 0.5 split
-    records = [
-        DatasetRecord("1", "Text 1", SentimentLabel.POSITIVE, "s", {"product": "P"}),
-        DatasetRecord("2", "Text 2", SentimentLabel.POSITIVE, "s", {"product": "P"}),
-    ]
-    splitter = StratifiedSplitter(train_ratio=0.5, val_ratio=0.5, test_ratio=0.0)
-    split = splitter.split(records)
-    assert len(split.train) + len(split.val) + len(split.test) == 2
+@pytest.mark.parametrize(
+    "ratios",
+    [
+        (-0.1, 0.6, 0.5),
+        (0.6, -0.1, 0.5),
+        (0.6, 0.5, -0.1),
+    ],
+)
+def test_stratified_splitter_negative_ratios(ratios):
+    with pytest.raises(ValueError, match=r"^split ratios must be non-negative$"):
+        StratifiedSplitter(*ratios)
 
 
 def test_filename_metadata_parser_training_variants():
@@ -181,3 +240,32 @@ def test_filename_metadata_parser_training_variants():
     m2 = FilenameMetadataParser.parse("SoloProduct - Amazon Reviews.csv")
     assert m2["product"] == "SoloProduct"
     assert m2["platform"] == "Amazon"
+
+
+def test_stratified_splitter_zero_ratios():
+    s1 = StratifiedSplitter(train_ratio=1.0, val_ratio=0.0, test_ratio=0.0)
+    assert s1.train_ratio == 1.0
+    assert s1.val_ratio == 0.0
+    assert s1.test_ratio == 0.0
+
+    s2 = StratifiedSplitter(train_ratio=0.0, val_ratio=1.0, test_ratio=0.0)
+    assert s2.train_ratio == 0.0
+
+    s3 = StratifiedSplitter(train_ratio=0.5, val_ratio=0.5, test_ratio=0.0)
+    assert s3.test_ratio == 0.0
+
+
+def test_stratified_splitter_precision_rounding():
+    with pytest.raises(ValueError, match=r"^split ratios must sum to 1\.0"):
+        StratifiedSplitter(0.70001, 0.15, 0.15)
+
+
+def test_dataset_loader_delimiter_tie_breaks_to_comma(tmp_path: Path):
+    csv_file = tmp_path / "Tie (Cat) - Reviews.csv"
+    # Exactly 1 semicolon and 1 comma in header
+    csv_file.write_text("Content,Tag;\nGreat,Positive;\n", encoding="utf-8")
+    loader = DatasetLoader(root_dir=tmp_path)
+    records = loader.load_all()
+    assert len(records) == 1
+    assert records[0].text == "Great"
+    assert records[0].label == SentimentLabel.POSITIVE

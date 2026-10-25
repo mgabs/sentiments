@@ -34,7 +34,7 @@ class DatasetLoader:
         filename = file_path.name
         metadata = FilenameMetadataParser.parse(filename)
 
-        with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
+        with open(file_path, encoding="utf-8", errors="ignore") as f:
             sample = f.readline()
             if not sample:
                 return records
@@ -45,7 +45,7 @@ class DatasetLoader:
             reader = csv.reader(f, delimiter=delimiter)
 
             try:
-                headers = [h.strip().lower() for h in next(reader, [])]
+                headers = [h.strip(" \t\r\n;,").lower() for h in next(reader)]
             except Exception:
                 return records
 
@@ -60,7 +60,7 @@ class DatasetLoader:
                     continue
 
                 raw_text = row[text_col_idx]
-                raw_label = row[label_col_idx]
+                raw_label = row[label_col_idx].strip(" \t\r\n;,")
 
                 cleaned_text = TextSanitizer.clean(raw_text)
                 if not cleaned_text:
@@ -84,7 +84,7 @@ class DatasetLoader:
     def _find_col(self, headers: list[str], candidates: list[str]) -> Optional[int]:
         for idx, col in enumerate(headers):
             # Strip BOM if present
-            clean_col = col.lstrip("\ufeff")
+            clean_col = col[1:] if col.startswith("\ufeff") else col
             if clean_col in candidates:
                 return idx
         return None

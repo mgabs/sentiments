@@ -17,9 +17,9 @@
 ## Phase 3: Dataset Ingestion & Preprocessing (`sentiments.dataset`) [Parallel Worktree: `.worktrees/dataset-pipeline`]
 - [x] 3.1 **BDD**: Write Gherkin feature scenarios for CSV discovery, dynamic delimiter detection, label mapping, and stratified splitting in `tests/bdd/features/dataset_pipeline.feature`.
 - [x] 3.2 **Review Gate 5.2**: Phase 3 BDD scenarios approved.
-- [ ] 3.3 **Unit Tests**: Implement unit tests (`tests/unit/test_dataset.py`) covering edge cases: malformed rows, missing columns, empty files, split ratio validation (>= 95% coverage).
-- [ ] 3.4 **Implementation**: Implement `DatasetLoader`, `LabelNormalizer`, and `StratifiedSplitter` in `src/sentiments/dataset/`.
-- [ ] 3.5 **Mutation Tests**: Run `mutmut` on `src/sentiments/dataset/` and achieve 100% kill score.
+- [x] 3.3 **Unit Tests**: Implement unit tests (`tests/unit/test_dataset.py`) covering edge cases: malformed rows, missing columns, empty files, split ratio validation (>= 95% coverage).
+- [x] 3.4 **Implementation**: Implement `DatasetLoader`, `LabelNormalizer`, and `StratifiedSplitter` in `src/sentiments/dataset/`.
+- [x] 3.5 **Mutation Tests**: Run `mutmut` on `src/sentiments/dataset/` and achieve 100% kill score.
 
 ## Phase 4: Tier 0 Dumb Baseline Classifier (`sentiments.providers.tier0`) [Parallel Worktree: `.worktrees/tier0-baseline`]
 - [ ] 4.1 **BDD**: Write Gherkin feature scenarios for `MajorityClassClassifier` and `LexiconRuleClassifier` in `tests/bdd/features/tier0_baseline.feature`.
