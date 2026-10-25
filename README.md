@@ -50,20 +50,22 @@ Built following strict **Spec- and Test-Driven Development (STDD)** via OpenSpec
 
 ### Installation
 ```bash
-uv sync
+make install    # or: uv sync
 ```
 
 ### Run Tests & Quality Gates
 ```bash
 # 1. Run all unit and BDD tests
-uv run pytest
+make test
 
 # 2. Run test suite with branch coverage (enforcing >= 95%)
-uv run pytest --cov=sentiments --cov-branch
+make coverage
 
 # 3. Run mutation testing (100% kill score on core logic)
-uv run mutmut run
-uv run mutmut results
+make mutation
+
+# 4. Run baseline benchmark
+make benchmark
 ```
 
 ### Run Baseline Benchmark
