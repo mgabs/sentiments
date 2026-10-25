@@ -10,7 +10,7 @@ from sentiments.dataset.models import DatasetRecord
 class MajorityClassClassifier:
     def __init__(self) -> None:
         self.majority_label: Optional[SentimentLabel] = None
-        self.confidence: float = 0.0
+        self.confidence: Optional[float] = None
 
     @property
     def tier(self) -> Tier:
@@ -27,17 +27,18 @@ class MajorityClassClassifier:
         counts = Counter(r.label for r in records)
         max_count = max(counts.values())
 
-        # Deterministic tie breaking: alphabetical order of label value
-        candidates = sorted([lbl for lbl, cnt in counts.items() if cnt == max_count], key=lambda x: x.value)
+        # Deterministic tie breaking: alphabetical order of label string enum
+        candidates = sorted([lbl for lbl, cnt in counts.items() if cnt == max_count])
         self.majority_label = candidates[0]
         self.confidence = max_count / len(records)
 
     def classify(self, text: str) -> SentimentResult:
         if self.majority_label is None:
             raise RuntimeError("classifier must be fitted before inference")
+        if not isinstance(text, str):
+            raise ValueError("text must be a string")
 
         t0 = time.perf_counter()
-        # Fast path inference
         label = self.majority_label
         conf = self.confidence
         latency = (time.perf_counter() - t0) * 1000.0
@@ -78,8 +79,10 @@ class LexiconRuleClassifier:
         return "lexicon_rule_baseline"
 
     def classify(self, text: str) -> SentimentResult:
+        if not isinstance(text, str):
+            raise ValueError("text must be a string")
         t0 = time.perf_counter()
-        words = self._WORD_RE.findall(text.lower()) if text else []
+        words = self._WORD_RE.findall(text.lower())
 
         pos_count = sum(1 for w in words if w in self._POSITIVE_WORDS)
         neg_count = sum(1 for w in words if w in self._NEGATIVE_WORDS)
@@ -88,12 +91,12 @@ class LexiconRuleClassifier:
             label = SentimentLabel.POSITIVE
             diff = pos_count - neg_count
             total = pos_count + neg_count
-            confidence = min(1.0, 0.5 + 0.5 * (diff / total))
+            confidence = 0.5 + 0.5 * (diff / total)
         elif neg_count > pos_count:
             label = SentimentLabel.NEGATIVE
             diff = neg_count - pos_count
             total = pos_count + neg_count
-            confidence = min(1.0, 0.5 + 0.5 * (diff / total))
+            confidence = 0.5 + 0.5 * (diff / total)
         else:
             label = SentimentLabel.NEUTRAL
             confidence = 0.50

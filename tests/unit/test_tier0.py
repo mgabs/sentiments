@@ -9,6 +9,8 @@ def test_majority_classifier_protocol_conformance():
     assert isinstance(clf, SentimentClassifier)
     assert clf.tier == Tier.TIER_0
     assert clf.model_name == "majority_class_baseline"
+    assert clf.majority_label is None
+    assert clf.confidence is None
 
 
 def test_majority_classifier_unfitted_raises():
@@ -119,3 +121,49 @@ def test_lexicon_classifier_batch():
     assert batch[0].label == SentimentLabel.POSITIVE
     assert batch[1].label == SentimentLabel.NEGATIVE
     assert batch[2].label == SentimentLabel.NEUTRAL
+
+
+def test_majority_classifier_latency_millisecond_scaling(monkeypatch):
+    records = [DatasetRecord("1", "Good text", SentimentLabel.POSITIVE, "src", {"product": "P"})]
+    clf = MajorityClassClassifier()
+    clf.fit(records)
+
+    times = [0.0, 0.005]  # 5ms
+    monkeypatch.setattr("time.perf_counter", lambda: times.pop(0))
+    res = clf.classify("sample")
+    assert res.latency_ms == pytest.approx(5.0)
+
+
+def test_lexicon_classifier_latency_millisecond_scaling(monkeypatch):
+    clf = LexiconRuleClassifier()
+    times = [0.0, 0.005]  # 5ms
+    monkeypatch.setattr("time.perf_counter", lambda: times.pop(0))
+    res = clf.classify("sample")
+    assert res.latency_ms == pytest.approx(5.0)
+
+
+def test_majority_classifier_invalid_input_type():
+    records = [DatasetRecord("1", "Good text", SentimentLabel.POSITIVE, "src", {"product": "P"})]
+    clf = MajorityClassClassifier()
+    clf.fit(records)
+    with pytest.raises(ValueError, match=r"^text must be a string$"):
+        clf.classify(None)
+
+
+def test_lexicon_classifier_invalid_input_type():
+    clf = LexiconRuleClassifier()
+    with pytest.raises(ValueError, match=r"^text must be a string$"):
+        clf.classify(None)
+
+
+def test_lexicon_classifier_mixed_polarity_exact_confidence():
+    clf = LexiconRuleClassifier()
+    # 2 positive, 1 negative -> diff=1, total=3, conf = 0.5 + 0.5 * (1/3) = 0.666667
+    mixed_pos = clf.classify("good great bad")
+    assert mixed_pos.label == SentimentLabel.POSITIVE
+    assert mixed_pos.confidence == pytest.approx(0.5 + 0.5 * (1.0 / 3.0))
+
+    # 2 negative, 1 positive -> diff=1, total=3, conf = 0.5 + 0.5 * (1/3) = 0.666667
+    mixed_neg = clf.classify("bad terrible good")
+    assert mixed_neg.label == SentimentLabel.NEGATIVE
+    assert mixed_neg.confidence == pytest.approx(0.5 + 0.5 * (1.0 / 3.0))
