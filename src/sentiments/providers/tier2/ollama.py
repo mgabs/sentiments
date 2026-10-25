@@ -28,6 +28,10 @@ class OllamaBackend:
             "model": self._model_name,
             "prompt": prompt,
             "stream": False,
+            "options": {
+                "num_predict": 128,
+                "temperature": 0.0,
+            },
         }
         if json_schema:
             payload["format"] = "json"
@@ -50,8 +54,13 @@ class OllamaBackend:
                 raise ClassifierProviderError(
                     f"Model '{self._model_name}' not found on Ollama at {self.base_url}. Run 'ollama pull {self._model_name}'."
                 ) from exc
+            detail = ""
+            try:
+                detail = exc.read().decode("utf-8")
+            except Exception:
+                pass
             raise ClassifierProviderError(
-                f"Ollama HTTP {exc.code} error: {exc.reason}"
+                f"Ollama HTTP {exc.code} error: {exc.reason} {detail}".strip()
             ) from exc
         except urllib.error.URLError as exc:
             raise ClassifierProviderError(

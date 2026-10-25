@@ -2,7 +2,7 @@ import time
 from typing import Sequence
 
 from sentiments.core.classifier import SentimentClassifier
-from sentiments.core.models import Tier, SentimentResult
+from sentiments.core.models import Tier, SentimentResult, SentimentLabel
 from sentiments.providers.base import ClassifierProviderError
 from sentiments.providers.tier2.core import build_sentiment_prompt, parse_sentiment_output
 from sentiments.providers.tier2.protocol import SLMBackend
@@ -55,5 +55,22 @@ class Tier2SLMClassifier:
             metadata=metadata,
         )
 
-    def classify_batch(self, texts: Sequence[str]) -> list[SentimentResult]:
-        return [self.classify(t) for t in texts]
+    def classify_batch(self, texts: Sequence[str], fail_fast: bool = False) -> list[SentimentResult]:
+        results = []
+        for t in texts:
+            try:
+                results.append(self.classify(t))
+            except Exception as exc:
+                if fail_fast:
+                    raise
+                results.append(
+                    SentimentResult(
+                        label=SentimentLabel.NEUTRAL,
+                        confidence=0.33,
+                        latency_ms=0.0,
+                        tier=self.tier,
+                        model_name=self.model_name,
+                        metadata={"error": str(exc)},
+                    )
+                )
+        return results
