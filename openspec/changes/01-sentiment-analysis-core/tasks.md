@@ -43,10 +43,10 @@
 - [x] 6.5 **Mutation Tests**: Run `mutmut` on `src/sentiments/eval/` and achieve 100% kill score.
 
 ## Phase 7: Verification & Final Gate
-- [ ] 7.1 Verify 100% BDD scenario pass rate across entire suite.
-- [ ] 7.2 Verify >= 95% total unit test line and branch coverage.
-- [ ] 7.3 Verify 100% mutation test kill score on all core logic.
-- [ ] 7.4 Execute live baseline benchmark against `nlp-datasets/` labeled test split and generate summary report.
+- [x] 7.1 Verify 100% BDD scenario pass rate across entire suite.
+- [x] 7.2 Verify >= 95% total unit test line and branch coverage.
+- [x] 7.3 Verify 100% mutation test kill score on all core logic.
+- [x] 7.4 Execute live baseline benchmark against `nlp-datasets/` labeled test split and generate summary report.
 
 ---
 

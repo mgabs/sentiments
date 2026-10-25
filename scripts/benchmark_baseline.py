@@ -1,0 +1,73 @@
+import time
+from pathlib import Path
+from sentiments.core import Tier
+from sentiments.dataset import DatasetLoader, StratifiedSplitter
+from sentiments.providers.tier0 import MajorityClassClassifier, LexiconRuleClassifier
+from sentiments.eval import MetricsCalculator, BenchmarkReporter, ModelEvaluation
+
+
+def run_benchmark():
+    datasets_dir = Path("nlp-datasets/trustpilot-reviews")
+    print(f"Loading datasets from {datasets_dir}...")
+    records = DatasetLoader(datasets_dir).load_all()
+    print(f"Loaded {len(records)} valid records.")
+
+    splitter = StratifiedSplitter(train_ratio=0.7, val_ratio=0.15, test_ratio=0.15, seed=42)
+    split = splitter.split(records)
+    train_data, val_data, test_data = split.train, split.val, split.test
+    print(f"Split sizes - Train: {len(train_data)}, Val: {len(val_data)}, Test: {len(test_data)}")
+
+    y_test_true = [r.label for r in test_data]
+    test_texts = [r.text for r in test_data]
+
+    # Model 1: Majority Class Classifier
+    majority_clf = MajorityClassClassifier()
+    majority_clf.fit(train_data)
+
+    t0 = time.perf_counter()
+    majority_results = majority_clf.classify_batch(test_texts)
+    maj_duration = time.perf_counter() - t0
+    maj_preds = [r.label for r in majority_results]
+    maj_latencies = [r.latency_ms for r in majority_results]
+
+    maj_metrics = MetricsCalculator.classification_metrics(y_test_true, maj_preds)
+    maj_eff = MetricsCalculator.efficiency_metrics(maj_latencies, total_duration_s=maj_duration)
+    maj_eval = ModelEvaluation(
+        model_name="MajorityClassClassifier",
+        tier=Tier.TIER_0,
+        classification=maj_metrics,
+        efficiency=maj_eff,
+        estimated_cost_per_1k=0.0,
+    )
+
+    # Model 2: Lexicon Rule Classifier
+    lexicon_clf = LexiconRuleClassifier()
+
+    t0 = time.perf_counter()
+    lex_results = lexicon_clf.classify_batch(test_texts)
+    lex_duration = time.perf_counter() - t0
+    lex_preds = [r.label for r in lex_results]
+    lex_latencies = [r.latency_ms for r in lex_results]
+
+    lex_metrics = MetricsCalculator.classification_metrics(y_test_true, lex_preds)
+    lex_eff = MetricsCalculator.efficiency_metrics(lex_latencies, total_duration_s=lex_duration)
+    lex_eval = ModelEvaluation(
+        model_name="LexiconRuleClassifier",
+        tier=Tier.TIER_0,
+        classification=lex_metrics,
+        efficiency=lex_eff,
+        estimated_cost_per_1k=0.0,
+    )
+
+    # Generate Markdown Table
+    md_table = BenchmarkReporter.to_markdown([maj_eval, lex_eval], baseline=maj_eval)
+    print("\n--- BENCHMARK REPORT ---")
+    print(md_table)
+
+    output_path = Path("benchmark_report.md")
+    output_path.write_text(f"# Tier 0 Baseline Benchmark Report\n\nDataset: `nlp-datasets/etsy-reviews` ({len(test_data)} test samples)\n\n{md_table}\n")
+    print(f"\nReport written to {output_path}")
+
+
+if __name__ == "__main__":
+    run_benchmark()
