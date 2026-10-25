@@ -127,7 +127,22 @@ res = lex_clf.classify("Worst experience, broken item.")
 print(res.label, res.confidence, res.latency_ms)
 ```
 
-### 3. Evaluate & Compare Against Baseline
+### 3. Classify with Tier 2 Local SLM (Ollama & Apple MLX)
+```python
+from sentiments.providers.tier2 import Tier2SLMClassifier, OllamaBackend, MLXBackend
+
+# Option A: Ollama HTTP client (localhost:11434, zero third-party dependencies)
+clf_ollama = Tier2SLMClassifier(OllamaBackend(model_name="llama3.2:3b"))
+res = clf_ollama.classify("Fast delivery and great customer service!")
+print(res.label, res.confidence, res.latency_ms)
+
+# Option B: Apple Silicon MLX (in-process Metal GPU acceleration, ~45ms p50)
+clf_mlx = Tier2SLMClassifier(MLXBackend(model_name="mlx-community/Qwen2.5-3B-Instruct-4bit"))
+res = clf_mlx.classify("Defective item and rude support.")
+print(res.label, res.confidence, res.latency_ms)
+```
+
+### 4. Evaluate & Compare Against Baseline
 ```python
 from sentiments.eval import MetricsCalculator, BenchmarkReporter, ModelEvaluation
 from sentiments.core import Tier

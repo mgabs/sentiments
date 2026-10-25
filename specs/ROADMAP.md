@@ -35,7 +35,7 @@ quadrantChart
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | **Tier 0** | Dumb Baseline (Majority Class, Lexicon Polarity) | $< 0.01\text{ ms}$ | $\$0.00$ | Floor baseline; offline sanity check | **Completed** |
 | **Tier 1** | Frontier Zero/Few-Shot Reasoning (Claude 3.5, GPT-4o) | $500–2500\text{ ms}$ | $\$5.00–\$30.00$ | Implicit sarcasm, emotion causes, taxonomy discovery | **Backlog** |
-| **Tier 2** | Distilled Compact SLMs (Llama 3 8B, Qwen 2.5, Phi-4) | $50–150\text{ ms}$ | $\$0.05–\$0.20$ | Self-hosted batch inference, ABSA, multi-lingual | **Backlog** |
+| **Tier 2** | Compact SLMs (Llama 3.2 3B, Qwen 2.5 3B, Phi-4) | $45–100\text{ ms}$ | $\$0.00$ (local) | Local self-hosted inference, ABSA, multi-lingual | **Completed (Ollama & MLX)** |
 | **Tier 3** | Specialized Fine-Tuned Encoders (RoBERTa, DeBERTa) | $10–40\text{ ms}$ | Fixed Infra | High-volume ticket classification, standard polarity | **Backlog** |
 | **Tier 4** | Ultra-Lightweight Edge / ONNX (Quantized, SetFit) | $< 5\text{ ms}$ | Negligible CPU | Real-time streaming, edge devices, high-QPS firehoses | **Backlog** |
 
@@ -51,6 +51,16 @@ quadrantChart
 - [x] Tier 0 classifiers: `MajorityClassClassifier` & `LexiconRuleClassifier`.
 - [x] Evaluation engine: Accuracy, Macro F1, Precision, Recall, Confusion Matrix, Latency percentiles, QPS, Cost estimator, Markdown & JSON reports.
 - [x] 100% BDD behavior coverage, 99% branch coverage, 100% mutation kill score on core logic.
+
+---
+
+### Milestone 2: Tier 2 Local SLM Classifier — Ollama & Apple MLX (`feat/02`) — [COMPLETED]
+- [x] Pluggable `SLMBackend` interface protocol (`generate`, `is_available`, `model_name`).
+- [x] `OllamaBackend`: Standard library `urllib` HTTP client communicating with `localhost:11434` (0 external dependencies).
+- [x] `MLXBackend`: Native Apple Silicon Metal GPU in-process acceleration via dynamic `mlx-lm` integration.
+- [x] Supported 3B compact models: `llama3.2:3b` and `qwen2.5:3b` (4-bit quantized, $\le 3.5\text{GB}$ RAM).
+- [x] Deterministic prompt builder (`build_sentiment_prompt`) and resilient JSON parser (`parse_sentiment_output`) stripping markdown code fences and clamping confidence bounds.
+- [x] Full BDD behavior specifications (`tests/bdd/features/tier2_slm.feature`), 100% unit test branch coverage, zero network regressions.
 
 ---
 
