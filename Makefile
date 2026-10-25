@@ -1,4 +1,4 @@
-.PHONY: help install sync test test-unit test-bdd coverage mutation benchmark clean
+.PHONY: help install sync test test-unit test-bdd coverage mutation benchmark baseline clean
 
 help:
 	@echo "Available make targets:"
@@ -8,7 +8,7 @@ help:
 	@echo "  test-bdd   Run BDD behavior scenarios only"
 	@echo "  coverage   Run tests with branch coverage (>= 95%)"
 	@echo "  mutation   Run mutation testing via mutmut"
-	@echo "  benchmark  Run live Tier 0 baseline benchmark"
+	@echo "  baseline   Run live Tier 0 baseline benchmark (alias: benchmark)"
 	@echo "  clean      Clean cache and temporary test artifacts"
 
 install sync:
@@ -31,7 +31,7 @@ mutation:
 	uv run mutmut run
 	uv run mutmut results
 
-benchmark:
+benchmark baseline:
 	uv run python scripts/benchmark_baseline.py
 
 clean:
