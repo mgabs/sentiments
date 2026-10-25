@@ -5,6 +5,7 @@
 Build an empirical, spec-driven sentiment evaluation and inference platform comparing model architectures across quality, latency, throughput, and operational economics.
 
 ### Guiding Principles
+- **Research Before Building**: Every feature MUST conduct empirical research (`specs/features/<feature>/research.md` / Gate 0) investigating prior art, real-world pricing/latency feasibility, dataset edge cases, and alternatives before committing to building.
 - **Dumb Baselines First**: Never deploy or justify an expensive, slow model without proving a statistically significant delta ($\Delta F1 > 0$) over the free, sub-millisecond Tier 0 floor.
 - **Spec- & Test-Driven (SDTRD)**: Every capability begins with Gherkin behavior specs (100% behavior coverage), followed by unit tests ($\ge 95\%$ line/branch coverage), and mutation verification ($100\%$ kill score).
 - **Pareto-Optimal Selection**: Select models based on real-world engineering trade-offs (Cost per 1k calls, $p_{95}$ latency SLA, QPS) rather than raw benchmark vanity scores.

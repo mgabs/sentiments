@@ -13,10 +13,16 @@
 ### Rule 2: Multi-Agent Parallel Streams via Git Worktrees
 - When tasks/slices have **no mutual dependencies** (orthogonal modules, distinct capabilities, or decoupled tests):
   1. **Pre-Requisite Contract Lock**: Any shared domain models, interfaces, or contracts (e.g. `core/models.py`) MUST be implemented, tested, and committed to the parent feature branch *before* spawning parallel worktrees.
-  2. **Worktree Hygiene**: Ensure `.worktrees/` is present in root `.gitignore`. Check for and clean any stale `.git/index.lock` prior to worktree operations:
-     ```bash
-     rtk rm -f .git/index.lock
-     ```
+  2. **Worktree Hygiene & Git Config Guard (`core.bare` Trap)**:
+     - Ensure `.worktrees/` is present in root `.gitignore`.
+     - Check for and clean any stale `.git/index.lock` prior to worktree operations:
+       ```bash
+       rtk rm -f .git/index.lock
+       ```
+     - **Shared Config Invariant**: Git commands inside worktrees MUST NEVER mutate shared repository config. Explicitly guard against worktree operations setting `bare = true` on the parent repository:
+       ```bash
+       rtk git config core.bare false
+       ```
   3. **Spawn Isolated Worktree**:
      ```bash
      rtk git worktree add .worktrees/<feature-id>-<stream-name> -b feat/<feature-id>/<stream-name>
@@ -24,10 +30,13 @@
   4. **Environment & Path Resolution**:
      - Tests and modules MUST resolve repository and dataset roots dynamically (e.g. iterating `Path(__file__).parents` until root marker like `.git` or `pyproject.toml` is found).
      - Reuse parent virtual environment (`.venv`) inside the worktree without reinstallation.
-  5. **Concurrently Dispatched Subagents**:
+  5. **Concurrently Dispatched Subagents & Human Gate Escalation**:
      - Dispatch a dedicated subagent (`invoke_subagent`) per stream, passing the worktree directory.
+     - **Hard Prohibition**: Subagents **NEVER** self-approve human gates (Gates 1, 2, 3, 4, 5.x, 6, B1, B2) or jump ahead into coding autonomously.
+     - **Main-Loop Escalation Protocol**: Upon completing any gate artifact, the subagent MUST pause, send a message to the Lead Orchestrator on the main loop, and halt execution.
+     - **User Clearance**: Lead Orchestrator presents the clickable artifact link to the human user. Clearance is delivered back to the subagent only after explicit human approval in the main conversation.
      - Each agent executes its vertical slice in isolation:
-       - BDD Scenarios (Gate 5.x)
+       - BDD Scenarios (Gate 5.x escalation)
        - Unit Tests (Red)
        - Minimal Implementation (Green)
        - Coverage ($\ge 95\%$ line & branch)
@@ -48,6 +57,9 @@
        rtk git worktree remove .worktrees/<feature-id>-<stream-2>
        rtk git branch -d feat/<feature-id>/<stream-2>
        ```
+  7. **Shared File Collision Protocol**:
+     - When parallel streams touch shared dispatch, routing, or test harness files (e.g., CLI key event matchers, central enum routers, UI status bars, BDD runners):
+     - Merge conflicts MUST be resolved **strictly additively**: combine registrations from both features, preserve handlers from both streams, and keep all test cases intact. NEVER overwrite or drop another stream's registrations or assertions.
 
 ### Rule 3: Fast-Track Bugfix Protocol (Zero-Contamination Bug Isolation)
 - **Scope Distinction**:
@@ -77,13 +89,35 @@
   6. **Rebase Active Feature Branches**:
      - Rebase active feature branches and worktrees onto updated `main`.
 
+### Rule 4: Mandatory Pre-Commit Hooks & Verification
+- **Always Install Pre-Commit Hooks**:
+  - Every project MUST configure and install pre-commit hooks (`pre-commit install` or repo hooks).
+  - Pre-commit configuration lives in `.pre-commit-config.yaml`.
+- **Pre-Commit Verification Protocol**:
+  - Before staging and committing ANY changes:
+    1. Inspect status and diff: `rtk git status` and `rtk git diff`.
+    2. Run all linters and formatters (e.g., `pre-commit run --all-files` or project equivalent).
+    3. Run all unit and integration tests.
+  - **Zero-Bypass Prohibition**: Bypassing hooks via `git commit --no-verify` or `-n` is strictly forbidden. If a check or test fails, fix the code/test before committing.
+
 ---
 
 ## 2. Feature Lifecycle & Human Gates
 
+### Canonical Directory Layout
+```
+specs/
+├── WORKFLOW.md
+├── features/       <-- Active in-progress feature development (proposals, designs, tasks, specs)
+├── living/         <-- Canonical living specifications of shipped capabilities
+├── archive/        <-- Archived lifecycle artifacts (proposals, designs, tasks of merged features)
+└── bug-reports/    <-- Documented defect triage reports
+```
+
 ```mermaid
 flowchart TD
-    B0[Checkout feat/branch] --> G1[Gate 1: Proposal Review]
+    B0[Checkout feat/branch] --> G0[Gate 0: Research & Discovery Review]
+    G0 --> G1[Gate 1: Proposal Review]
     G1 --> G2[Gate 2: Specs Review]
     G2 --> G3[Gate 3: Architecture & Design Review]
     G3 --> G4[Gate 4: Tasks Breakdown Review]
@@ -118,6 +152,18 @@ flowchart TD
 
     MA & MB --> G6[Gate 6: Spec Sync & Archive]
 ```
+
+### Gate 0: Research & Discovery Review
+- **Mandatory Requirement**: Every feature MUST conduct empirical research and investigate technical trade-offs *before committing to building the feature* or locking in proposals and architectural designs.
+- **Artifact**: `specs/features/<feature>/research.md`
+- **Mandatory Sections**:
+  - **Intent & Research Goals**: Core questions and feasibility risks to resolve.
+  - **Prior Art & Ecosystem Survey**: Analysis of existing libraries, models, papers, or internal tools (reusable vs build).
+  - **Empirical Spikes & Feasibility**: Micro-benchmarks, latency measurements, memory usage, pricing models, or API rate limits.
+  - **Dataset & Input Nuances**: Inspection of real-world datasets, class distributions, noise, and edge cases.
+  - **Alternatives Considered & Trade-Offs**: Comparative trade-off matrix of at least 2–3 candidate approaches.
+  - **Risks & Mitigations**: Identified failure modes and architectural bottlenecks.
+- **Gate**: Human approval required before drafting proposal and specifications.
 
 ### Gate 1: Proposal Review
 - **Artifact**: `specs/features/<feature>/proposal.md`
@@ -214,15 +260,19 @@ Execute each vertical slice through three strict sub-steps:
 
 ## 5. Coding Agents & Review Harness Integration
 
-- **Anchor Directives**: Honor line-anchored feedback directives (`#ref file:line <directive>`) emitted by code review harnesses (such as `lgtm`). Acknowledge directive, resolve at exact target line, verify test pass, and commit.
+SDTRD integrates natively with [mgabs/lgtm](https://github.com/mgabs/lgtm) as the real-time code review cockpit and agent steering harness:
+
+- **Anchor Directives**: Honor line-anchored feedback directives (`#ref file:line <directive>`) emitted by `lgtm`. Acknowledge directive, resolve at exact target line, verify test pass, and commit.
 - **Review Inbox**: Check `.lgtm/reviews/` and inline user directives on every turn; resolve review items before advancing gates.
-- **Test Integrity (Anti-Fraud)**:
-  - NEVER delete assertions or weaken tests to force a green suite.
+- **Pre-Commit Verification**: Run all linters, formatting checks, and test suites prior to committing. Never bypass hooks with `--no-verify`.
+- **Test Integrity (Anti-Fraud Guardrails)**:
+  - NEVER delete assertions or weaken tests to force a green suite (`lgtm` test neutering guard will block review).
   - NEVER write vacuous assertions or tautological mocks.
   - NEVER skip/ignore failing tests without explicit human sign-off.
 - **Architecture Boundaries & Hygiene**:
   - Keep domain core pure (zero direct I/O, network, or framework coupling).
   - Restrict file modifications strictly to the active vertical slice (minimal blast radius).
+  - YAGNI enforcement: Zero dead unreferenced code added.
   - Leave zero scratch files, debug dumps, or `.env` artifacts in the working tree.
 
 ---
