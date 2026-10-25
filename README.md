@@ -22,6 +22,7 @@ Built following strict **Spec- and Test-Driven Development (STDD)** via OpenSpec
 
 ```
 ├── benchmark_report.md        # Live Tier 0 benchmark report on customer reviews
+├── ROADMAP.md                 # Product & technical roadmap for upcoming features
 ├── nlp-datasets/              # Raw labeled feedback corpora (Etsy, Trustpilot, etc.)
 ├── scripts/
 │   └── benchmark_baseline.py  # End-to-end evaluation runner on nlp-datasets/
@@ -133,6 +134,7 @@ print(report)
 ## Specifications & STDD Workflow
 
 All architectural decisions and behavior specifications are tracked in [specs/](file:///Users/mmetawea/Workbench/sentiments/specs):
+- [ROADMAP.md](file:///Users/mmetawea/Workbench/sentiments/specs/ROADMAP.md): High-level product & engineering roadmap with milestone features.
 - [specs/WORKFLOW.md](file:///Users/mmetawea/Workbench/sentiments/specs/WORKFLOW.md): SDTRD/STDD protocol, human review gates, and anti-fraud testing guidelines.
 - [specs/living/dataset-pipeline/spec.md](file:///Users/mmetawea/Workbench/sentiments/specs/living/dataset-pipeline/spec.md): Dataset ingestion and normalization requirements.
 - [specs/living/sentiment-engine/spec.md](file:///Users/mmetawea/Workbench/sentiments/specs/living/sentiment-engine/spec.md): Pluggable multi-tier inference engine contracts.
