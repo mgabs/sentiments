@@ -64,51 +64,42 @@ def run_benchmark():
 
     evaluations = [maj_eval, lex_eval]
 
-    # Model 3: Tier 2 Ollama SLM
-    ollama_backend = OllamaBackend(model_name="llama3.2:3b")
-    if ollama_backend.is_available():
-        print(f"[3/4] Running Tier 2 Ollama ({ollama_backend.model_name})...")
-        ollama_clf = Tier2SLMClassifier(backend=ollama_backend)
+    # Helper function to evaluate and report SLM models
+    def run_slm_eval(name: str, clf: Tier2SLMClassifier) -> None:
+        print(f"Running {name}...")
         t0 = time.perf_counter()
-        ollama_results = ollama_clf.classify_batch(test_texts)
-        ollama_duration = time.perf_counter() - t0
-        ollama_preds = [r.label for r in ollama_results]
-        ollama_latencies = [r.latency_ms for r in ollama_results]
-        ollama_metrics = MetricsCalculator.classification_metrics(y_test_true, ollama_preds)
-        ollama_eff = MetricsCalculator.efficiency_metrics(ollama_latencies, total_duration_s=ollama_duration)
-        ollama_eval = ModelEvaluation(
-            model_name=f"Ollama ({ollama_backend.model_name})",
-            tier=Tier.TIER_2,
-            classification=ollama_metrics,
-            efficiency=ollama_eff,
-            estimated_cost_per_1k=0.0,
+        results = clf.classify_batch(test_texts)
+        duration = time.perf_counter() - t0
+        preds = [r.label for r in results]
+        latencies = [r.latency_ms for r in results]
+        metrics = MetricsCalculator.classification_metrics(y_test_true, preds)
+        eff = MetricsCalculator.efficiency_metrics(latencies, total_duration_s=duration)
+        evaluations.append(
+            ModelEvaluation(
+                model_name=name,
+                tier=Tier.TIER_2,
+                classification=metrics,
+                efficiency=eff,
+                estimated_cost_per_1k=0.0,
+            )
         )
-        evaluations.append(ollama_eval)
-    else:
-        print("[3/4] Skipping Ollama (daemon not running on http://localhost:11434)")
 
-    # Model 4: Tier 2 MLX SLM
-    mlx_backend = MLXBackend(model_name="mlx-community/Llama-3.2-3B-Instruct-4bit")
-    if mlx_backend.is_available():
-        print(f"[4/4] Running Tier 2 MLX ({mlx_backend.model_name})...")
-        mlx_clf = Tier2SLMClassifier(backend=mlx_backend)
-        t0 = time.perf_counter()
-        mlx_results = mlx_clf.classify_batch(test_texts)
-        mlx_duration = time.perf_counter() - t0
-        mlx_preds = [r.label for r in mlx_results]
-        mlx_latencies = [r.latency_ms for r in mlx_results]
-        mlx_metrics = MetricsCalculator.classification_metrics(y_test_true, mlx_preds)
-        mlx_eff = MetricsCalculator.efficiency_metrics(mlx_latencies, total_duration_s=mlx_duration)
-        mlx_eval = ModelEvaluation(
-            model_name=f"MLX ({mlx_backend.model_name.split('/')[-1]})",
-            tier=Tier.TIER_2,
-            classification=mlx_metrics,
-            efficiency=mlx_eff,
-            estimated_cost_per_1k=0.0,
-        )
-        evaluations.append(mlx_eval)
-    else:
-        print("[4/4] Skipping MLX (requires macOS Apple Silicon and mlx-lm)")
+    # Tier 2 Ollama models
+    for model in ["llama3.2:3b", "qwen2.5:3b"]:
+        ollama_backend = OllamaBackend(model_name=model)
+        if ollama_backend.is_available():
+            run_slm_eval(f"Ollama ({model})", Tier2SLMClassifier(backend=ollama_backend))
+        else:
+            print(f"Skipping Ollama ({model}): daemon unreachable")
+
+    # Tier 2 MLX models
+    for model_id in ["mlx-community/Llama-3.2-3B-Instruct-4bit", "mlx-community/Qwen2.5-3B-Instruct-4bit"]:
+        mlx_backend = MLXBackend(model_name=model_id)
+        if mlx_backend.is_available():
+            short_name = model_id.split("/")[-1]
+            run_slm_eval(f"MLX ({short_name})", Tier2SLMClassifier(backend=mlx_backend))
+        else:
+            print(f"Skipping MLX ({model_id}): platform/library unavailable")
 
     # Generate Markdown Table
     md_table = BenchmarkReporter.to_markdown(evaluations, baseline=maj_eval)

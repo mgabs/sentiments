@@ -4,10 +4,12 @@ Dataset: `nlp-datasets/trustpilot-reviews` (137 test samples)
 
 | Model | Tier | Accuracy | Macro F1 | Δ F1 | p50 Latency (ms) | Latency Ratio | QPS | Cost / 1k ($) | Δ Cost ($) |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| MajorityClassClassifier | Tier.TIER_0 | 0.9270 | 0.3207 | +0.0000 | 0.00 | 1.0x | 641187.6 | 0.0000 | +0.0000 |
-| LexiconRuleClassifier | Tier.TIER_0 | 0.4745 | 0.2828 | -0.0379 | 0.01 | 195.4x | 83236.3 | 0.0000 | +0.0000 |
-| Ollama (llama3.2:3b) | Tier.TIER_2 | 0.9781 | 0.6257 | +0.3050 | 1149.27 | 27365546.3x | 0.9 | 0.0000 | +0.0000 |
-| MLX (Llama-3.2-3B-Instruct-4bit) | Tier.TIER_2 | 0.9781 | 0.6257 | +0.3050 | 2221.20 | 52889633.1x | 0.4 | 0.0000 | +0.0000 |
+| MajorityClassClassifier | Tier.TIER_0 | 0.9270 | 0.3207 | +0.0000 | 0.00 | 1.0x | 525911.7 | 0.0000 | +0.0000 |
+| LexiconRuleClassifier | Tier.TIER_0 | 0.4745 | 0.2828 | -0.0379 | 0.01 | 262.9x | 70727.9 | 0.0000 | +0.0000 |
+| Ollama (llama3.2:3b) | Tier.TIER_2 | 0.9781 | 0.6257 | +0.3050 | 1186.68 | 28256417.2x | 0.8 | 0.0000 | +0.0000 |
+| Ollama (qwen2.5:3b) | Tier.TIER_2 | 0.9051 | 0.5942 | +0.2735 | 1061.39 | 25273091.7x | 0.9 | 0.0000 | +0.0000 |
+| MLX (Llama-3.2-3B-Instruct-4bit) | Tier.TIER_2 | 0.9781 | 0.6257 | +0.3050 | 2323.44 | 55324123.6x | 0.4 | 0.0000 | +0.0000 |
+| MLX (Qwen2.5-3B-Instruct-4bit) | Tier.TIER_2 | 0.9197 | 0.5818 | +0.2610 | 2196.40 | 52299249.3x | 0.4 | 0.0000 | +0.0000 |
 
 ### Column Definitions
 - **Model**: Evaluated classifier name.
