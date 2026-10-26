@@ -119,3 +119,19 @@ def test_legacy_callable_backend_coverage():
     batch = clf.backend.predict_batch(["one", "two"])
     assert len(batch) == 2
 
+    # Error handling in legacy callable
+    def failing_provider_fn(text: str) -> dict:
+        raise ClassifierProviderError("Legacy provider error")
+
+    clf_err = ONNXClassifier(inference_fn=failing_provider_fn)
+    with pytest.raises(ClassifierProviderError, match="Legacy provider error"):
+        clf_err.classify("Hello")
+
+    def generic_failing_fn(text: str) -> dict:
+        raise ValueError("Generic failure")
+
+    clf_generic = ONNXClassifier(inference_fn=generic_failing_fn)
+    with pytest.raises(ClassifierProviderError, match="Provider request failed: Generic failure"):
+        clf_generic.classify("Hello")
+
+

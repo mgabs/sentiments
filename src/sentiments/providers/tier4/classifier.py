@@ -6,6 +6,7 @@ from sentiments.core.classifier import SentimentClassifier
 from sentiments.core.models import SentimentLabel, SentimentResult, Tier
 from sentiments.providers.base import ClassifierProviderError
 from sentiments.providers.tier4.mock import MockONNXBackend
+from sentiments.providers.tier4.packaging import ModelArtifactBundle
 from sentiments.providers.tier4.protocol import ONNXBackend
 
 
@@ -15,7 +16,7 @@ class ONNXClassifier:
     def __init__(
         self,
         backend: ONNXBackend | None = None,
-        model_path: str | Path | None = None,
+        model_path: str | Path | ModelArtifactBundle | None = None,
         inference_fn: Callable[[str], dict[str, Any]] | None = None,
         model_name: str | None = None,
     ) -> None:
@@ -23,7 +24,7 @@ class ONNXClassifier:
 
         Accepts:
           - A pre-configured `backend: ONNXBackend`
-          - Or a `model_path: str | Path` to an ONNX artifact bundle directory
+          - Or a `model_path: str | Path | ModelArtifactBundle`
           - Or a legacy `inference_fn` for backwards compatibility
         """
         if backend is not None:
