@@ -1,14 +1,43 @@
 # Spec-Driven, Testing-Railed Development (SDTRD) Workflow
 
+## 0. Universal Intake & Triage Protocol (Pre-Execution Invariant)
+
+### Rule 0: Zero Direct Edits to `main` (Ironclad Invariant)
+- **`main` / `master` is strictly read-only for developers and AI agents.**
+- Modifying ANY tracked file while on `main` is a critical workflow violation.
+- **There are NO exceptions**: not for single-line typos, scripts, Makefiles, dependency updates, or documentation.
+- **Pre-Execution Turn Check**:
+  - Before invoking `edit_file`, `write_file`, or running mutating scripts, the agent MUST inspect the active branch:
+    ```bash
+    rtk git branch --show-current
+    ```
+  - If the active branch is `main` or `master`, the agent MUST **HALT** and checkout an isolated branch first.
+
+### Work-Type Classification & Branch Routing
+Every user instruction MUST be classified into one of four tracks prior to executing any file edit:
+
+| Track | Prefix | Scope | Protocol / Gates |
+| :--- | :--- | :--- | :--- |
+| **Feature Track** | `feat/<id>-<slug>` | Domain capabilities, architecture, providers, engine algorithms | Full SDTRD Lifecycle (Gates 0–6) |
+| **Bugfix Track** | `fix/<slug>` | Defect resolution, test failure fixes, crashes, regressions | Fast-Track Bugfix Protocol (Gates B1–B3) |
+| **Chore / Build Track** | `chore/<slug>` or `build/<slug>` | Tooling, dependencies (`pyproject.toml`), runners, Makefiles | Lightweight Task Track (Gates L1–L3) |
+| **Docs Track** | `docs/<slug>` | Architecture guides, specifications, wiki, README changes | Lightweight Task Track (Gates L1–L3) |
+
+---
+
 ## 1. Branching & Worktree Strategy
 
-### Rule 1: Always Use a New Feature Branch
-- **NEVER** work directly on `main` / `master`.
-- Every `specs/` feature proposal MUST originate on a dedicated feature branch:
+### Rule 1: Always Use an Isolated Branch
+- Every unit of work MUST originate on a dedicated branch branched off `main`:
   ```bash
+  # For features:
   rtk git checkout -b feat/<feature-id>-<feature-name>
+  # For chores / build / tooling:
+  rtk git checkout -b chore/<task-slug>
+  # For documentation:
+  rtk git checkout -b docs/<doc-slug>
   ```
-- All proposal, specs, design, tasks, and vertical-slice work commits to this feature branch.
+- All proposal, specs, design, tasks, and vertical-slice work commits to this branch. Direct pushes/commits to `main` are blocked.
 
 ### Rule 2: Multi-Agent Parallel Streams via Git Worktrees
 - When tasks/slices have **no mutual dependencies** (orthogonal modules, distinct capabilities, or decoupled tests):
@@ -234,7 +263,42 @@ flowchart TD
 
 ---
 
-## 4. Apply Phase: Vertical-Slice Test-Driven Implementation
+## 4. Lightweight Task Track (Chores, Tooling, Docs)
+
+For non-feature modifications (updating benchmark runners, dependency upgrades, Makefiles, documentation, scripts):
+
+```mermaid
+flowchart TD
+    Req[Chore / Build / Docs Request] --> GL1[Gate L1: Scope & Diff Plan]
+    GL1 --> Branch[Checkout chore/ build/ or docs/ branch]
+    Branch --> Exec[Execute Minimal Changes]
+    Exec --> Verify[Run Tests & Linters]
+    Verify --> GL2[Gate L2: Review & Approval]
+    GL2 --> Merge[Fast-Forward Merge to main]
+```
+
+### Gate L1: Scope & Diff Plan
+- Before editing files, output a concise 3-line declaration to the user:
+  1. Branch name: `chore/<slug>`, `build/<slug>`, or `docs/<slug>`.
+  2. Target files: Explicit list of files to create or modify.
+  3. Acceptance criteria: Verification steps to run (`make test`, `make coverage`).
+
+### Gate L2: Verification & Review
+- Verify zero test regressions: `make test`.
+- Verify coverage invariants are preserved: `make coverage` ($\ge 95\%$).
+- Inspect status and diff: `rtk git status` and `rtk git diff`.
+
+### Gate L3: Merge Sign-Off
+- Fast-forward merge to `main`:
+  ```bash
+  rtk git checkout main
+  rtk git merge --ff-only <branch-name>
+  rtk git branch -d <branch-name>
+  ```
+
+---
+
+## 5. Apply Phase: Vertical-Slice Test-Driven Implementation
 
 Execute each vertical slice through three strict sub-steps:
 
