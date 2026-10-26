@@ -40,4 +40,4 @@ Today, the platform lacks a low-latency, mid-memory, high-accuracy tier:
 ---
 
 ## Review Gate
-- [ ] **Gate 1 Approval**: Proposal reviewed and approved by human before drafting specs.
+- [x] **Gate 1 Approval**: Proposal reviewed and approved by human before drafting specs.
