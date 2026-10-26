@@ -33,13 +33,16 @@ class ONNXClassifier:
             # Backwards-compatibility wrapper for legacy callable
             name = model_name or "legacy-onnx"
             self.backend = _LegacyCallableBackend(inference_fn, name)
-        elif model_path is not None:
-            # Import dynamically to prevent onnxruntime dependency at initialization if not installed
+        else:
             from sentiments.providers.tier4.engine import ONNXRuntimeBackend
 
-            self.backend = ONNXRuntimeBackend(model_path)
-        else:
-            self.backend = MockONNXBackend()
+            default_dir = Path("models/tier4")
+            target = model_path if model_path is not None else default_dir
+            if isinstance(target, (str, Path)) and not Path(target).exists():
+                raise ClassifierProviderError(
+                    f"ONNX model artifact not found at '{target}'. Provide a valid model_path or backend."
+                )
+            self.backend = ONNXRuntimeBackend(target)
 
     @property
     def tier(self) -> Tier:

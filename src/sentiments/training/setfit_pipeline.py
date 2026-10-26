@@ -324,10 +324,11 @@ def train_setfit_model(
 
     cfg = config or SetFitTrainingConfig()
 
-    # Load base model
+    # Load base model with balanced class weights for imbalanced review datasets
     model = SetFitModel.from_pretrained(
         cfg.model_id,
         labels=["NEGATIVE", "NEUTRAL", "POSITIVE"],
+        head_params={"class_weight": "balanced"},
     )
 
     args = TrainingArguments(

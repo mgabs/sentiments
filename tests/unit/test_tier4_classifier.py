@@ -96,8 +96,21 @@ def test_onnx_classifier_classify_batch_fail_fast():
         clf.classify_batch(["fail"], fail_fast=True)
 
 
-def test_onnx_classifier_default_mock_backend():
+def test_onnx_classifier_default_live_backend():
     clf = ONNXClassifier()
+    assert clf.tier == Tier.TIER_4
+    assert clf.model_name == "setfit-minilm-int8"
+    assert clf.backend.is_available() is True
+    res = clf.classify("The product was fantastic, loved it!")
+    assert isinstance(res, SentimentResult)
+    assert res.label in (SentimentLabel.POSITIVE, SentimentLabel.NEUTRAL, SentimentLabel.NEGATIVE)
+    batch = clf.classify_batch(["Good product", "Terrible support"])
+    assert len(batch) == 2
+
+
+def test_onnx_classifier_explicit_mock_backend():
+    backend = MockONNXBackend(model_name="mock-onnx-minilm")
+    clf = ONNXClassifier(backend=backend)
     assert clf.tier == Tier.TIER_4
     assert clf.model_name == "mock-onnx-minilm"
     assert clf.backend.is_available() is True
@@ -105,6 +118,12 @@ def test_onnx_classifier_default_mock_backend():
     assert isinstance(res, SentimentResult)
     batch = clf.classify_batch(["Good product", "Terrible support"])
     assert len(batch) == 2
+
+
+def test_onnx_classifier_missing_model_path_raises():
+    with pytest.raises(ClassifierProviderError, match="ONNX model artifact not found"):
+        ONNXClassifier(model_path="path/does/not/exist")
+
 
 
 def test_legacy_callable_backend_coverage():

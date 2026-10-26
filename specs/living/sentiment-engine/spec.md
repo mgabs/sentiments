@@ -26,7 +26,7 @@ Defines interface contracts and execution semantics for pluggable sentiment clas
 - **REQ-ENG-5**: Tier 1 (Frontier API Provider): Configurable client interfacing with LLM endpoints (prompt template + response parsing + token usage tracking).
 - **REQ-ENG-6**: Tier 2 (Distilled / Compact SLM Provider): Unified `Tier2SLMClassifier` supporting local backends (`OllamaBackend` via HTTP `localhost:11434` and `MLXBackend` via Apple Silicon Metal acceleration) for compact models (e.g. `llama3.2:3b`, `qwen2.5:3b`) with deterministic JSON schema extraction, markdown fence stripping, and confidence normalization.
 - **REQ-ENG-7**: Tier 3 (Fine-Tuned Encoder Provider): Local transformer encoder (e.g., PyTorch/HuggingFace RoBERTa/DeBERTa) pipeline.
-- **REQ-ENG-8**: Tier 4 (Ultra-Lightweight ONNX Provider): Quantized ONNX runtime / SetFit embedding inference optimized for CPU execution.
+- **REQ-ENG-8**: Tier 4 (Ultra-Lightweight ONNX Provider): Production `ONNXClassifier` backed by `ONNXRuntimeBackend` using `onnxruntime` (`CPUExecutionProvider`) and Rust `tokenizers.Tokenizer`. Executes pre-quantized INT8 sentence transformer models (e.g. SetFit MiniLM) with median latency $p_{50} < 5.0\text{ms}$, throughput $\ge 150\text{ QPS}$, $< 120\text{MB}$ RAM, and zero runtime network calls. Resolves local model bundles containing `model_quantized.onnx`, `tokenizer.json`, and `config.json`. Supports resilient batch fallback when `fail_fast=False`.
 
 ## 3. Assumptions
 - **ASM-ENG-1**: Taxonomy is strictly 3-class (`POSITIVE`, `NEGATIVE`, `NEUTRAL`) across all tiers for parity.

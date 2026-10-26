@@ -6,9 +6,10 @@ from unittest.mock import MagicMock, patch
 
 import numpy as np
 import pytest
-import torch
-import torch.nn as nn
-from sklearn.linear_model import LogisticRegression
+
+torch = pytest.importorskip("torch", reason="train dependencies (torch) not installed")
+nn = pytest.importorskip("torch.nn", reason="torch.nn not installed")
+LogisticRegression = pytest.importorskip("sklearn.linear_model", reason="sklearn not installed").LogisticRegression
 from tokenizers import Tokenizer
 from tokenizers.models import BPE
 
@@ -251,6 +252,7 @@ def test_train_setfit_model_mocked():
         mock_from_pretrained.assert_called_once_with(
             cfg.model_id,
             labels=["NEGATIVE", "NEUTRAL", "POSITIVE"],
+            head_params={"class_weight": "balanced"},
         )
         mock_trainer.train.assert_called_once()
 

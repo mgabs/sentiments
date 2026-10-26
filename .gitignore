@@ -15,6 +15,7 @@ mutants/
 
 # Git Worktrees & AGY Harness Workspaces
 .worktrees/
+.lgtm/
 
 # Build & Distribution
 dist/

@@ -4,6 +4,7 @@ from sentiments.core import Tier
 from sentiments.dataset import DatasetLoader, StratifiedSplitter
 from sentiments.providers.tier0 import MajorityClassClassifier, LexiconRuleClassifier
 from sentiments.providers.tier2 import Tier2SLMClassifier, OllamaBackend, MLXBackend
+from sentiments.providers.tier4 import ONNXClassifier
 from sentiments.eval import MetricsCalculator, BenchmarkReporter, ModelEvaluation
 
 
@@ -101,12 +102,36 @@ def run_benchmark():
         else:
             print(f"Skipping MLX ({model_id}): platform/library unavailable")
 
+    # Tier 4 Quantized ONNX Model
+    tier4_model_dir = Path("models/tier4")
+    if tier4_model_dir.exists():
+        print(f"\n[Tier 4] Running ONNXClassifier ({tier4_model_dir})...")
+        onnx_clf = ONNXClassifier(model_path=tier4_model_dir)
+        t0 = time.perf_counter()
+        onnx_results = onnx_clf.classify_batch(test_texts)
+        onnx_duration = time.perf_counter() - t0
+        onnx_preds = [r.label for r in onnx_results]
+        onnx_latencies = [r.latency_ms for r in onnx_results]
+        onnx_metrics = MetricsCalculator.classification_metrics(y_test_true, onnx_preds)
+        onnx_eff = MetricsCalculator.efficiency_metrics(onnx_latencies, total_duration_s=onnx_duration)
+        evaluations.append(
+            ModelEvaluation(
+                model_name=f"ONNX ({onnx_clf.model_name})",
+                tier=Tier.TIER_4,
+                classification=onnx_metrics,
+                efficiency=onnx_eff,
+                estimated_cost_per_1k=0.0,
+            )
+        )
+    else:
+        print(f"Skipping Tier 4: {tier4_model_dir} not found")
+
     # Generate Markdown Table
     md_table = BenchmarkReporter.to_markdown(evaluations, baseline=maj_eval)
     footnotes = (
         "### Column Definitions\n"
         "- **Model**: Evaluated classifier name.\n"
-        "- **Tier**: Architectural tier (Tier 0: Rule-based heuristics, Tier 2: Local SLM).\n"
+        "- **Tier**: Architectural tier (Tier 0: Rule-based heuristics, Tier 2: Local SLM, Tier 4: Quantized ONNX CPU).\n"
         "- **Accuracy**: Proportion of correct predictions over total samples.\n"
         "- **Macro F1**: Unweighted mean of F1-scores across all classes.\n"
         "- **Δ F1**: Difference in Macro F1 relative to baseline (`Macro F1(Candidate) - Macro F1(Baseline)`).\n"
