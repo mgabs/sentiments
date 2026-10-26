@@ -142,7 +142,20 @@ res = clf_mlx.classify("Defective item and rude support.")
 print(res.label, res.confidence, res.latency_ms)
 ```
 
-### 4. Evaluate & Compare Against Baseline
+### 4. Classify with Tier 4 Ultra-Lightweight ONNX (CPU Runtime)
+```python
+from sentiments.providers.tier4 import ONNXClassifier
+
+# Loads quantized INT8 ONNX bundle (models/tier4), sub-2ms latency, zero network calls
+clf_onnx = ONNXClassifier(model_path="models/tier4")
+res = clf_onnx.classify("Outstanding customer support and rapid delivery!")
+print(res.label, res.confidence, res.latency_ms)
+
+# Vectorized batch inference (sub-5ms on batch sizes up to 64)
+batch_results = clf_onnx.classify_batch(["Loved it!", "Terrible experience, arrived damaged."])
+```
+
+### 5. Evaluate & Compare Against Baseline
 ```python
 from sentiments.eval import MetricsCalculator, BenchmarkReporter, ModelEvaluation
 from sentiments.core import Tier
@@ -155,6 +168,40 @@ eff_metrics = MetricsCalculator.efficiency_metrics(latencies_ms)
 report = BenchmarkReporter.to_markdown([candidate_eval], baseline=baseline_eval)
 print(report)
 ```
+
+---
+
+## Live Benchmark Results
+
+Measured on `nlp-datasets/trustpilot-reviews` (137 test samples):
+
+| Model | Tier | Accuracy | Macro F1 | Δ F1 | p50 Latency (ms) | Latency Ratio | QPS | Cost / 1k ($) |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| MajorityClassClassifier | Tier.TIER_0 | 0.9270 | 0.3207 | +0.0000 | 0.00 | 1.0x | 957,205.3 | $0.0000 |
+| LexiconRuleClassifier | Tier.TIER_0 | 0.4745 | 0.2828 | -0.0379 | 0.01 | 270.9x | 68,737.7 | $0.0000 |
+| Ollama (llama3.2:3b) | Tier.TIER_2 | **0.9781** | **0.6257** | **+0.3050** | 1,245.20 | 29.6Mx | 0.8 | $0.0000 |
+| Ollama (qwen2.5:3b) | Tier.TIER_2 | 0.9051 | 0.5942 | +0.2735 | 1,139.98 | 27.1Mx | 0.8 | $0.0000 |
+| MLX (Llama-3.2-3B) | Tier.TIER_2 | **0.9781** | **0.6257** | **+0.3050** | 2,278.88 | 54.3Mx | 0.4 | $0.0000 |
+| MLX (Qwen2.5-3B) | Tier.TIER_2 | 0.9197 | 0.5818 | +0.2610 | 2,159.10 | 51.4Mx | 0.5 | $0.0000 |
+| **ONNX (`setfit-minilm-int8`)** | **Tier.TIER_4** | **0.9489** | **0.5021** | **+0.1814** | **1.87** | **44.4kx** | **479.2** | **$0.0000** |
+
+---
+
+## Azure Hosting Cost Analysis
+
+Comparative cost estimate for serving predictions on Microsoft Azure:
+
+| Model / Tier | Azure Compute Architecture | Hardware | Monthly Baseline | Cost / 1k Requests | Cost / 1M Requests |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **Tier 4: ONNX (`setfit-minilm-int8`)** | **Azure Container Apps (Serverless CPU)** | 0.5 vCPU, 1 GB RAM | Pay-per-use | **$0.00004** | **$0.04** |
+| **Tier 4: ONNX (`setfit-minilm-int8`)** | **Azure VM (`Standard_B2s`)** | 2 vCPU, 4 GB RAM | ~$30 / mo | $0.00002 | $0.02 (at load) |
+| **Tier 2: Llama 3.2 3B (MaaS API)** | **Azure AI Model Catalog (Serverless)** | Pay-per-token | Pay-per-use | **$0.03000** | **$30.00** |
+| **Tier 2: Llama 3.2 3B (Self-Hosted vLLM)** | **Azure VM (`NC4as_T4_v3`)** | 1x NVIDIA T4 GPU | ~$380 / mo | $0.00500 | $5.00 (at load) |
+| **Tier 2: Llama 3.2 3B (CPU VM)** | **Azure VM (`Standard_D4s_v5`)** | 4 vCPU, 16 GB RAM | ~$140 / mo | $0.05000 | $50.00 |
+
+### Key Economic Takeaway
+- **Tier 4 ONNX**: Runs on ultra-minimal serverless CPU at **$0.04 per 1M requests** with sub-2ms latency.
+- **Tier 2 SLM (Llama 3.2 3B)**: **750x more expensive** per prediction ($30.00 vs $0.04 per 1M calls) and requires dedicated GPU infrastructure or token-metered endpoints.
 
 ---
 
