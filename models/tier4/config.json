@@ -1,0 +1,19 @@
+{
+  "model_name": "setfit-minilm-int8",
+  "max_length": 128,
+  "id2label": {
+    "0": "NEGATIVE",
+    "1": "NEUTRAL",
+    "2": "POSITIVE"
+  },
+  "metadata": {
+    "quantization": "int8_dynamic",
+    "base_model": "sentence-transformers/paraphrase-MiniLM-L3-v2",
+    "num_classes": 3,
+    "classes": [
+      "NEGATIVE",
+      "NEUTRAL",
+      "POSITIVE"
+    ]
+  }
+}
