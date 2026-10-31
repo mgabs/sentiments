@@ -1,0 +1,3 @@
+[submodule "nlp-datasets"]
+	path = nlp-datasets
+	url = https://github.com/Kimola/nlp-datasets.git
